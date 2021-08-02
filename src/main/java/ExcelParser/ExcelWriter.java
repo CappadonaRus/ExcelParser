@@ -1,8 +1,6 @@
 package ExcelParser;
 
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.DataFormatter;
-import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -25,13 +23,16 @@ public class ExcelWriter {
 
         List<Map<String, Row>> filteredMap = getFilteredMap();
         String lastCategory = "";
-        for (int i = 0; i < filteredMap.size(); i++) {
-            XSSFRow createdRow = sheet.createRow(i);
-            for (Map.Entry<String, Row> rowMap : filteredMap.get(i).entrySet()) {
-                String category = rowMap.getKey();
-//                if(!lastCategory.equals(category)){
-//
-//                }
+        int rowCount = 0;
+        for (Map<String, Row> filteredRowMap : filteredMap) {
+            for (Map.Entry<String, Row> rowMap : filteredRowMap.entrySet()) {
+                String rowCategory = rowMap.getKey();
+                if (!lastCategory.equals(rowCategory) && !rowCategory.equals("headers")) {
+                    createCategoryRow(workBook, sheet, rowCount, rowCategory);
+                    lastCategory = rowCategory;
+                    rowCount++;
+                }
+                XSSFRow createdRow = sheet.createRow(rowCount);
                 Row row = rowMap.getValue();
                 int numberOfCells = row.getPhysicalNumberOfCells();
                 for (int j = 0; j < numberOfCells; j++) {
@@ -39,6 +40,7 @@ public class ExcelWriter {
                     createdRow.createCell(j).setCellValue(cellValue);
                 }
             }
+            rowCount++;
         }
         try {
             String filePath = getFilePath();
@@ -47,6 +49,15 @@ public class ExcelWriter {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private static void createCategoryRow(XSSFWorkbook workBook, XSSFSheet sheet, int rowCount, String rowCategory) {
+        CellStyle style = workBook.createCellStyle();
+        style.setFillBackgroundColor(IndexedColors.YELLOW.getIndex());
+        style.setFillPattern(CellStyle.BIG_SPOTS);
+        XSSFRow categoryRow = sheet.createRow(rowCount);
+        categoryRow.setRowStyle(style);
+        categoryRow.createCell(1).setCellValue("Category: " + rowCategory);
     }
 
     private static String getCellValueAsString(Cell predictCell) {

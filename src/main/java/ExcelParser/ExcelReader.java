@@ -35,6 +35,10 @@ public class ExcelReader {
             Sheet datatypeSheet = workbook.getSheetAt(0);
 
             Iterator<Row> iterator = datatypeSheet.iterator();
+            Row headersRow = iterator.next();
+            Map<String,Row> headersMap = new HashMap<>();
+            headersMap.put("headers", headersRow);
+            excelRowsMap.add(headersMap);
 
             while (iterator.hasNext()) {
                 Row currentRow = iterator.next();
