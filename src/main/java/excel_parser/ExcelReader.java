@@ -1,6 +1,9 @@
-package ExcelParser;
+package excel_parser;
 
-import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.DataFormatter;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.File;
@@ -19,11 +22,11 @@ public class ExcelReader {
         return excelRowsMap;
     }
 
-    public static XSSFWorkbook getWorkBook(){
+    public static XSSFWorkbook getWorkBook() {
         return workbook;
     }
 
-    public static String getFilePath(){
+    public static String getFilePath() {
         return filePath;
     }
 
@@ -36,7 +39,7 @@ public class ExcelReader {
 
             Iterator<Row> iterator = datatypeSheet.iterator();
             Row headersRow = iterator.next();
-            Map<String,Row> headersMap = new HashMap<>();
+            Map<String, Row> headersMap = new HashMap<>();
             headersMap.put("headers", headersRow);
             excelRowsMap.add(headersMap);
 
@@ -56,7 +59,7 @@ public class ExcelReader {
 
     private static void getPredictCellValue(Row currentRow, Cell predictCell) {
         switch (predictCell.getCellType()) {
-            case Cell.CELL_TYPE_STRING:
+            case STRING:
                 //skip header
                 break;
 

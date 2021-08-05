@@ -1,4 +1,4 @@
-package ExcelParser;
+package excel_parser;
 
 
 import org.apache.poi.ss.usermodel.Row;
