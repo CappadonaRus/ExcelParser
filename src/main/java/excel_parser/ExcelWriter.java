@@ -7,13 +7,11 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static excel_parser.ExcelReader.getFilePath;
-import static excel_parser.ExcelReader.getWorkBook;
-import static excel_parser.FirstExcelReport.createFirstReport;
-import static excel_parser.SecondExcelReport.createSecondReport;
+import static excel_parser.Main.getFilePath;
 
 public class ExcelWriter {
 
@@ -23,21 +21,26 @@ public class ExcelWriter {
     public static final int ANSWER_CELL_COLUMN_INDEX = 4;
     public static final int DATA_SHEET_INDEX = 0;
 
-    public static void writeToExcel() {
-        XSSFWorkbook workBook = getWorkBook();
-        createFirstReport(workBook);
-        createSecondReport(workBook);
-        writeSheetIntoBook(workBook);
+    private static List<String> categoriesList = new ArrayList<>();
+
+    static {
+        categoriesList.add("headers");
+        for (int i = 1; i <= 125; i++) {
+            categoriesList.add(String.valueOf(i));
+        }
     }
 
+    public static List<String> getCategoriesList() {
+        return categoriesList;
+    }
 
-    static void createReport(XSSFWorkbook workBook, XSSFSheet sheet, List<Map<String, Row>> predictList) {
+    static void createReport(XSSFWorkbook workBook, XSSFSheet sheet, List<Map<String, Row>> reportRowsList) {
         String lastCategory = "";
         int rowCount = 0;
-        for (Map<String, Row> predictMap : predictList) {
+        for (Map<String, Row> predictMap : reportRowsList) {
             for (Map.Entry<String, Row> rowMap : predictMap.entrySet()) {
                 String rowCategory = rowMap.getKey();
-                if (!lastCategory.equals(rowCategory) && isHeadersRow(rowCategory)) {
+                if (!lastCategory.equals(rowCategory) && ExcelReportsUtil.isHeadersRow(rowCategory)) {
                     XSSFRow categoryRow = sheet.createRow(rowCount);
                     createCategoryRow(categoryRow, workBook, rowCategory);
                     lastCategory = rowCategory;
@@ -45,31 +48,28 @@ public class ExcelWriter {
                 }
                 XSSFRow rowForSave = sheet.createRow(rowCount);
                 Row predictRow = rowMap.getValue();
-                savePredictRowCells(rowForSave, predictRow);
+                copyCellsForNewRow(rowForSave, predictRow);
             }
             rowCount++;
         }
     }
 
-    private static void savePredictRowCells(XSSFRow row, Row predictRow) {
-        int numberOfCells = predictRow.getPhysicalNumberOfCells();
+    private static void copyCellsForNewRow(XSSFRow newRow, Row row) {
+        int numberOfCells = row.getPhysicalNumberOfCells();
         for (int j = 0; j < numberOfCells; j++) {
-            getCellContentViaTypeAndWrite(row.createCell(j), predictRow.getCell(j));
+            writeCellContentViaType(newRow.createCell(j), row.getCell(j));
         }
     }
 
-    private static void writeSheetIntoBook(XSSFWorkbook workBook) {
+    public static void writeSheetIntoBook(XSSFWorkbook workBook) {
         try {
             String filePath = getFilePath();
             FileOutputStream fileOut = new FileOutputStream(filePath);
             workBook.write(fileOut);
+            fileOut.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    private static boolean isHeadersRow(String rowCategory) {
-        return !rowCategory.equals("headers");
     }
 
     private static void createCategoryRow(XSSFRow categoryRow, XSSFWorkbook workbook, String rowCategory) {
@@ -100,23 +100,23 @@ public class ExcelWriter {
         return categoryStyle;
     }
 
-    private static void getCellContentViaTypeAndWrite(Cell createdCell, Cell predictCell) {
+    private static void writeCellContentViaType(Cell newCell, Cell cell) {
         try {
-            switch (predictCell.getCellType()) {
+            switch (cell.getCellType()) {
                 case BOOLEAN:
-                    createdCell.setCellValue(predictCell.getBooleanCellValue());
+                    newCell.setCellValue(cell.getBooleanCellValue());
                     break;
                 case NUMERIC:
-                    createdCell.setCellValue(predictCell.getNumericCellValue());
+                    newCell.setCellValue(cell.getNumericCellValue());
                     break;
                 case STRING:
-                    createdCell.setCellValue(predictCell.getStringCellValue());
+                    newCell.setCellValue(cell.getStringCellValue());
                     break;
             }
         } catch (NullPointerException npe) {
             // if null set null
             DataFormatter nullTypeFormatter = new DataFormatter();
-            createdCell.setCellValue(nullTypeFormatter.formatCellValue(predictCell));
+            newCell.setCellValue(nullTypeFormatter.formatCellValue(cell));
         }
     }
 }

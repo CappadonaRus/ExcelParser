@@ -1,14 +1,28 @@
 package excel_parser;
 
-import static excel_parser.ExcelReader.readExcelAndGetSheetData;
-import static excel_parser.ExcelWriter.writeToExcel;
-import static excel_parser.ExcelWriterUtil.filterRows;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+import static excel_parser.ExcelReportsUtil.createFirstReport;
+import static excel_parser.FirstExcelReport.createReportCategoriesList;
+import static excel_parser.SecondExcelReport.createSecondReport;
 
 public class Main {
 
+    private static String filePath = "./—рез ≈ва 09.08.xlsx";
+
+    public static String getFilePath() {
+        return filePath;
+    }
+
+
     public static void main(String[] args) {
-        readExcelAndGetSheetData();
-        filterRows();
-        writeToExcel();
+        XSSFWorkbook workBook = ExcelReader.readExcelWorkBook(filePath);
+        Sheet dataSheet = workBook.getSheetAt(0);
+        ExcelReportsUtil.getRowsListWithoutAnswerCell(dataSheet);
+        createReportCategoriesList();
+        createFirstReport(workBook);
+        createSecondReport(workBook);
+        ExcelWriter.writeSheetIntoBook(workBook);
     }
 }
