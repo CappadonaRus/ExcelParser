@@ -18,7 +18,6 @@ public class ExcelWriterUtil {
         }
     }
 
-
     public static List<Map<String, Row>> getFilteredMap() {
         return rowsForFirstReport;
     }

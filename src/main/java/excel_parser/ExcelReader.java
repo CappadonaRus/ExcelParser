@@ -41,15 +41,7 @@ public class ExcelReader {
             workbook = new XSSFWorkbook(inputStream);
             Sheet dataSheet = workbook.getSheetAt(0);
 
-            Iterator<Row> rowIterator = dataSheet.iterator();
-            Row headersRow = rowIterator.next();
-            createHeadersMap(headersRow);
-
-            while (rowIterator.hasNext()) {
-                Row currentRow = rowIterator.next();
-                String predictCellValue = getPredictCellValue(currentRow);
-                createPredictRowMap(currentRow, predictCellValue);
-            }
+            readSheetRowsAndCreatePredictList(dataSheet);
 
             inputStream.close();
 
@@ -57,6 +49,18 @@ public class ExcelReader {
             e.printStackTrace();
         }
 
+    }
+
+    private static void readSheetRowsAndCreatePredictList(Sheet dataSheet) {
+        Iterator<Row> rowIterator = dataSheet.iterator();
+        Row headersRow = rowIterator.next();
+        createHeadersMap(headersRow);
+
+        while (rowIterator.hasNext()) {
+            Row currentRow = rowIterator.next();
+            String predictCellValue = getPredictCellValue(currentRow);
+            createPredictRowMap(currentRow, predictCellValue);
+        }
     }
 
     static void createHeadersMap(Row headersRow) {

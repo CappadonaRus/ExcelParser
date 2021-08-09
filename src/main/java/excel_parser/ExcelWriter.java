@@ -7,10 +7,13 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 
-import static excel_parser.ExcelReader.*;
-import static excel_parser.ExcelWriterUtil.*;
+import static excel_parser.ExcelReader.getFilePath;
+import static excel_parser.ExcelReader.getWorkBook;
+import static excel_parser.FirstExcelReport.createFirstReport;
+import static excel_parser.SecondExcelReport.createSecondReport;
 
 public class ExcelWriter {
 
@@ -22,108 +25,13 @@ public class ExcelWriter {
 
     public static void writeToExcel() {
         XSSFWorkbook workBook = getWorkBook();
-        List<Map<String, Row>> filteredRowsList = getFilteredMap();
-        createFirstReport(workBook, filteredRowsList);
-        createSecondReport(workBook, filteredRowsList);
+        createFirstReport(workBook);
+        createSecondReport(workBook);
         writeSheetIntoBook(workBook);
     }
 
-    private static void createFirstReport(XSSFWorkbook workBook, List<Map<String, Row>> filteredRowsList) {
-        XSSFSheet sheet = workBook.createSheet("Срез Ева");
-        createReport(workBook, sheet, filteredRowsList);
-    }
 
-    private static void createSecondReport(XSSFWorkbook workBook, List<Map<String, Row>> firstReportRowsList) {
-        XSSFSheet sheet = workBook.createSheet("Срез Ева без оператора");
-        List<Map<String, Row>> rowsWithoutClearAnswersList = filterClearAnswerRows();
-        List<String> predictList = getPredictList();
-        List<Map<String, Row>> secondReportList = new ArrayList<>();
-//        addHeadersRow(rowsWithoutClearAnswersList, secondReportList);
-
-        for (String predict : predictList) {
-            List<Map<String, Row>> rowsWithAnswer = filterListForPredict(rowsWithoutClearAnswersList, predict);
-
-            if (rowsWithAnswer.size() >= 20) {
-                List<Map<String, Row>> uniqueRowsCategoryList = createUniqueRowsCategoryList(firstReportRowsList, rowsWithAnswer);
-                List<Map<String, Row>> shuffledTenRows = getShuffledTenRows(uniqueRowsCategoryList);
-                secondReportList.addAll(shuffledTenRows);
-            } else if (rowsWithAnswer.size() >= 10) {
-                List<Map<String, Row>> uniqueRowsCategoryList = createUniqueRowsCategoryList(firstReportRowsList, rowsWithAnswer);
-                if (uniqueRowsCategoryList.size() < 10) {
-                    secondReportList.addAll(uniqueRowsCategoryList);
-                } else {
-                    List<Map<String, Row>> shuffledTenRows = getShuffledTenRows(rowsWithAnswer);
-                    secondReportList.addAll(shuffledTenRows);
-                }
-            } else {
-                secondReportList.addAll(rowsWithAnswer);
-            }
-        }
-        createReport(workBook, sheet, secondReportList);
-    }
-
-    private static List<Map<String, Row>> getShuffledTenRows(List<Map<String, Row>> rowsWithoutAnswerList) {
-        Collections.shuffle(rowsWithoutAnswerList);
-        List<Map<String, Row>> categoryList = new ArrayList<>();
-        for (int i = 0; i < 10; i++) {
-            categoryList.add(rowsWithoutAnswerList.get(i));
-        }
-        return categoryList;
-    }
-
-    private static List<Map<String, Row>> createUniqueRowsCategoryList(List<Map<String, Row>> firstReportRowsList, List<Map<String, Row>> rowsWithoutAnswerList) {
-        List<Map<String, Row>> uniqueRowsCategoryList = new ArrayList<>();
-        for (int i = 0; i < rowsWithoutAnswerList.size(); i++) {
-            for (Map<String, Row> firstReportRowMap : firstReportRowsList) {
-                if (!rowsWithoutAnswerList.get(i).entrySet().containsAll(firstReportRowMap.entrySet())) {
-                    Map<String, Row> tempMap = new HashMap<>(rowsWithoutAnswerList.get(i));
-                    uniqueRowsCategoryList.add(tempMap);
-                }
-            }
-        }
-        return uniqueRowsCategoryList;
-    }
-
-    private static void addHeadersRow(List<Map<String, Row>> rowsWithoutClearAnswersList, List<Map<String, Row>> secondReportList) {
-        for (Map<String, Row> rowMap : rowsWithoutClearAnswersList) {
-            for (Map.Entry<String, Row> row : rowMap.entrySet()) {
-                if (row.getKey().equals("headers")) {
-                    secondReportList.add(rowMap);
-                    break;
-                }
-            }
-        }
-    }
-
-    private static List<Map<String, Row>> filterClearAnswerRows() {
-        List<Map<String, Row>> rowsWithoutClearAnswerList = new ArrayList<>();
-        XSSFWorkbook workbook = getWorkBook();
-        Sheet dataSheet = workbook.getSheetAt(DATA_SHEET_INDEX);
-
-        Iterator<Row> rowIterator = dataSheet.iterator();
-        Row headersRow = rowIterator.next();
-        Map<String, Row> headersMap = createHeadersMap(headersRow);
-        rowsWithoutClearAnswerList.add(headersMap);
-        while (rowIterator.hasNext()) {
-            Row currentRow = rowIterator.next();
-            Cell answerCell = currentRow.getCell(ANSWER_CELL_COLUMN_INDEX);
-            if (answerCell != null) {
-                String predictCellValue = getPredictCellValue(currentRow);
-                Map<String, Row> rowMap = new HashMap<>();
-                rowMap.put(predictCellValue, currentRow);
-                rowsWithoutClearAnswerList.add(rowMap);
-            }
-        }
-        return rowsWithoutClearAnswerList;
-    }
-
-    static Map<String, Row> createHeadersMap(Row headersRow) {
-        Map<String, Row> headersMap = new HashMap<>();
-        headersMap.put("headers", headersRow);
-        return headersMap;
-    }
-
-    private static void createReport(XSSFWorkbook workBook, XSSFSheet sheet, List<Map<String, Row>> predictList) {
+    static void createReport(XSSFWorkbook workBook, XSSFSheet sheet, List<Map<String, Row>> predictList) {
         String lastCategory = "";
         int rowCount = 0;
         for (Map<String, Row> predictMap : predictList) {
@@ -143,6 +51,13 @@ public class ExcelWriter {
         }
     }
 
+    private static void savePredictRowCells(XSSFRow row, Row predictRow) {
+        int numberOfCells = predictRow.getPhysicalNumberOfCells();
+        for (int j = 0; j < numberOfCells; j++) {
+            getCellContentViaTypeAndWrite(row.createCell(j), predictRow.getCell(j));
+        }
+    }
+
     private static void writeSheetIntoBook(XSSFWorkbook workBook) {
         try {
             String filePath = getFilePath();
@@ -150,13 +65,6 @@ public class ExcelWriter {
             workBook.write(fileOut);
         } catch (IOException e) {
             e.printStackTrace();
-        }
-    }
-
-    private static void savePredictRowCells(XSSFRow row, Row predictRow) {
-        int numberOfCells = predictRow.getPhysicalNumberOfCells();
-        for (int j = 0; j < numberOfCells; j++) {
-            getCellContentViaTypeAndWrite(row.createCell(j), predictRow.getCell(j));
         }
     }
 
