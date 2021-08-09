@@ -28,7 +28,7 @@ public class ExcelWriterUtil {
 
 
     public static void filterRows() {
-        List<Map<String, Row>> excelRowsMap = ExcelReader.getExcelRowMap();
+        List<Map<String, Row>> excelRowsMap = ExcelReader.getFirstReportRowsList();
         Collections.shuffle(excelRowsMap);
         for (String predictsList : predictList) {
             for (Map<String, Row> predictRow : excelRowsMap) {
