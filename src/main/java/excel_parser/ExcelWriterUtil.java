@@ -7,7 +7,9 @@ import java.util.*;
 
 public class ExcelWriterUtil {
 
+
     private static List<String> predictList = new ArrayList<>();
+    private static List<Map<String, Row>> rowsForFirstReport = new ArrayList<>();
 
     static {
         predictList.add("headers");
@@ -16,7 +18,14 @@ public class ExcelWriterUtil {
         }
     }
 
-    private static List<Map<String, Row>> filteredRowsMap = new ArrayList<>();
+
+    public static List<Map<String, Row>> getFilteredMap() {
+        return rowsForFirstReport;
+    }
+
+    public static List<String> getPredictList() {
+        return predictList;
+    }
 
 
     public static void filterRows() {
@@ -36,7 +45,7 @@ public class ExcelWriterUtil {
                 Row excelRow = row.getValue();
                 Map<String, Row> foundPredictMap = new HashMap<>();
                 foundPredictMap.put(predictValue, excelRow);
-                filteredRowsMap.add(foundPredictMap);
+                rowsForFirstReport.add(foundPredictMap);
             }
         }
     }
@@ -44,7 +53,7 @@ public class ExcelWriterUtil {
 
     private static boolean isMapHasTenRows(String predictFilter) {
         int rowCount = 0;
-        for (Map<String, Row> filteredRow : filteredRowsMap) {
+        for (Map<String, Row> filteredRow : rowsForFirstReport) {
             for (Map.Entry<String, Row> predictRow : filteredRow.entrySet()) {
                 String predict = predictRow.getKey();
                 if (predictFilter.equals(predict)) {
@@ -55,7 +64,16 @@ public class ExcelWriterUtil {
         return rowCount == 10;
     }
 
-    public static List<Map<String, Row>> getFilteredMap() {
-        return filteredRowsMap;
+    static List<Map<String, Row>> filterListForPredict(List<Map<String, Row>> rowsList, String predict) {
+        List<Map<String, Row>> filteredList = new ArrayList<>();
+        for (Map<String, Row> rowMap : rowsList) {
+            for (Map.Entry<String, Row> row : rowMap.entrySet()) {
+                String predictNumber = row.getKey();
+                if (predictNumber.equals(predict)) {
+                    filteredList.add(rowMap);
+                }
+            }
+        }
+        return filteredList;
     }
 }

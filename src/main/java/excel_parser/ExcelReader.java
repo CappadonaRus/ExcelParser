@@ -13,8 +13,8 @@ import java.util.*;
 
 public class ExcelReader {
 
-    private static String filePath = "./eva.xlsx";
-
+    public static final int PREDICT_CELL_COLUMN_INDEX = 5;
+    private static String filePath = "./—рез ≈ва 09.08.xlsx";
     private static List<Map<String, Row>> excelRowsMap = new ArrayList<>();
     private static XSSFWorkbook workbook;
 
@@ -30,23 +30,25 @@ public class ExcelReader {
         return filePath;
     }
 
+    public static List<Map<String, Row>> getExcelRowsMap() {
+        return excelRowsMap;
+    }
+
     public static void getExcelDate() {
 
         try {
             FileInputStream inputStream = new FileInputStream(new File(filePath));
             workbook = new XSSFWorkbook(inputStream);
-            Sheet datatypeSheet = workbook.getSheetAt(0);
+            Sheet dataSheet = workbook.getSheetAt(0);
 
-            Iterator<Row> iterator = datatypeSheet.iterator();
-            Row headersRow = iterator.next();
-            Map<String, Row> headersMap = new HashMap<>();
-            headersMap.put("headers", headersRow);
-            excelRowsMap.add(headersMap);
+            Iterator<Row> rowIterator = dataSheet.iterator();
+            Row headersRow = rowIterator.next();
+            createHeadersMap(headersRow);
 
-            while (iterator.hasNext()) {
-                Row currentRow = iterator.next();
-                Cell predictCell = currentRow.getCell(5);
-                getPredictCellValue(currentRow, predictCell);
+            while (rowIterator.hasNext()) {
+                Row currentRow = rowIterator.next();
+                String predictCellValue = getPredictCellValue(currentRow);
+                createPredictRowMap(currentRow, predictCellValue);
             }
 
             inputStream.close();
@@ -57,7 +59,15 @@ public class ExcelReader {
 
     }
 
-    private static void getPredictCellValue(Row currentRow, Cell predictCell) {
+    static void createHeadersMap(Row headersRow) {
+        Map<String, Row> headersMap = new HashMap<>();
+        headersMap.put("headers", headersRow);
+        excelRowsMap.add(headersMap);
+    }
+
+    public static String getPredictCellValue(Row currentRow) {
+        Cell predictCell = currentRow.getCell(PREDICT_CELL_COLUMN_INDEX);
+        String predictCellValue = "";
         switch (predictCell.getCellType()) {
             case STRING:
                 //skip header
@@ -65,11 +75,10 @@ public class ExcelReader {
 
             default:
                 DataFormatter stringFormatter = new DataFormatter();
-                String predictCellValue = stringFormatter.formatCellValue(predictCell);
-                createPredictRowMap(currentRow, predictCellValue);
+                predictCellValue = stringFormatter.formatCellValue(predictCell);
                 break;
-
         }
+        return predictCellValue;
     }
 
     private static void createPredictRowMap(Row currentRow, String predictCellValue) {
