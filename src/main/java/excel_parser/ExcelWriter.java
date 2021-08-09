@@ -1,6 +1,8 @@
 package excel_parser;
 
+import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -75,10 +77,17 @@ public class ExcelWriter {
     private static void createCategoryRow(XSSFRow categoryRow, XSSFWorkbook workbook, String rowCategory) {
         String categoryName = "Категория: " + rowCategory;
         CellStyle categoryStyle = createCellsStyle(workbook, IndexedColors.YELLOW);
+        addBoldFont(workbook, categoryStyle);
         categoryRow.createCell(CATEGORY_NAME_COLUMN_INDEX).setCellValue(categoryName);
         categoryRow.getCell(CATEGORY_NAME_COLUMN_INDEX).setCellStyle(categoryStyle);
         createCategoryCells(categoryStyle, categoryRow);
         createStatisticCell(workbook, categoryRow);
+    }
+
+    private static void addBoldFont(XSSFWorkbook workbook, CellStyle categoryStyle) {
+        XSSFFont fontBold = workbook.createFont();
+        fontBold.setBold(true);
+        categoryStyle.setFont(fontBold);
     }
 
     private static void createStatisticCell(XSSFWorkbook workbook, XSSFRow categoryRow) {
