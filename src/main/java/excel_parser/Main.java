@@ -9,7 +9,7 @@ import static excel_parser.SecondExcelReport.createSecondReport;
 
 public class Main {
 
-    private static String filePath = "./—рез ≈ва 09.08.xlsx";
+    private static String filePath = "./discharge (36).xlsx";
 
     public static String getFilePath() {
         return filePath;

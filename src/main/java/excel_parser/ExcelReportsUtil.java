@@ -99,18 +99,56 @@ public class ExcelReportsUtil {
         return !rowCategory.equals("headers");
     }
 
-    public static List<Map<String, Row>> createUniqueRowsList(List<Map<String, Row>> oldReportRowsList, List<Map<String, Row>> newReportRowsList) {
+    public static List<Map<String, Row>> createUniqueRowsList(List<Map<String, Row>> oldReportRowsList, List<Map<String, Row>> newReportRowsList, String category) {
         List<Map<String, Row>> uniqueRowsCategoryList = new ArrayList<>();
-        for (int i = 0; i < newReportRowsList.size(); i++) {
-            for (Map<String, Row> oldReportRowMap : oldReportRowsList) {
-                Map<String, Row> newReportRowMap = newReportRowsList.get(i);
-                if (!newReportRowMap.entrySet().containsAll(oldReportRowMap.entrySet())) {
-                    Map<String, Row> uniqueRowMap = new HashMap<>(newReportRowMap);
-                    uniqueRowsCategoryList.add(uniqueRowMap);
+        for (Map<String, Row> newRowMap : newReportRowsList) {
+            Row newRow = newRowMap.get(category);
+            ArrayList<Boolean> rowContainsResult = new ArrayList<>();
+            for (Map<String, Row> oldRowMap : oldReportRowsList) {
+                Row oldRow = oldRowMap.get(category);
+                if (newRow.equals(oldRow)) {
+                    rowContainsResult.add(true);
                 }
+            }
+            if(!rowContainsResult.contains(true)){
+                uniqueRowsCategoryList.add(newRowMap);
             }
         }
         return uniqueRowsCategoryList;
     }
+
+
+
+
+//    public static List<Map<String, Row>> createUniqueRowsList(List<Map<String, Row>> oldReportRowsList, List<Map<String, Row>> newReportRowsList, String category) {
+//        List<Map<String, Row>> uniqueRowsCategoryList = new ArrayList<>();
+//        List<Map<String,Row>> duplicateRows = new ArrayList<>();
+//        for (int i = 0; i < oldReportRowsList.size(); i++) {
+//            Row oldRow = oldReportRowsList.get(i).get(category);
+//            for (int j = 0; j < newReportRowsList.size(); j++) {
+//                Row newRow = newReportRowsList.get(j).get(category);
+//                if (oldRow.equals(newRow)) {
+//                    duplicateRows.add(newReportRowsList.get(j));
+//                }
+//            }
+//        }
+//
+//        return uniqueRowsCategoryList;
+//    }
+
+
+//    public static List<Map<String, Row>> createUniqueRowsList(List<Map<String, Row>> oldReportRowsList, List<Map<String, Row>> newReportRowsList) {
+//        List<Map<String, Row>> uniqueRowsCategoryList = new ArrayList<>();
+//        for (int i = 0; i < newReportRowsList.size(); i++) {
+//            for (Map<String, Row> oldReportRowMap : oldReportRowsList) {
+//                Map<String, Row> newReportRowMap = newReportRowsList.get(i);
+//                if (!newReportRowMap.entrySet().containsAll(oldReportRowMap.entrySet())) {
+//                    Map<String, Row> uniqueRowMap = new HashMap<>(newReportRowMap);
+//                    uniqueRowsCategoryList.add(uniqueRowMap);
+//                }
+//            }
+//        }
+//        return uniqueRowsCategoryList;
+//    }
 
 }

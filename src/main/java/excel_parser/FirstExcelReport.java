@@ -2,7 +2,10 @@ package excel_parser;
 
 import org.apache.poi.ss.usermodel.Row;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class FirstExcelReport {
 
@@ -14,7 +17,7 @@ public class FirstExcelReport {
 
     public static void createReportCategoriesList() {
         List<Map<String, Row>> rowsWithoutAnswerList = ExcelReportsUtil.getRowsWithoutAnswerList();
-        Collections.shuffle(rowsWithoutAnswerList);
+//        Collections.shuffle(rowsWithoutAnswerList);
         for (String predictsList : ExcelWriter.getCategoriesList()) {
             for (Map<String, Row> predictRow : rowsWithoutAnswerList) {
                 List<Map<String, Row>> categoryRowsList = createCategoryRowsList(predictRow, predictsList);
