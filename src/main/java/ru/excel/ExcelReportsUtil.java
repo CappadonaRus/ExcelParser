@@ -1,4 +1,4 @@
-package excel_parser;
+package ru.excel;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.DataFormatter;
@@ -9,16 +9,15 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.util.*;
 
-import static excel_parser.ExcelReader.PREDICT_CELL_COLUMN_INDEX;
-import static excel_parser.ExcelWriter.ANSWER_CELL_COLUMN_INDEX;
-import static excel_parser.ExcelWriter.createReport;
+import static ru.excel.ExcelWriter.ANSWER_CELL_COLUMN_INDEX;
+import static ru.excel.ExcelWriter.createReport;
 
 public class ExcelReportsUtil {
 
-    private static List<Map<String, Row>> rowsWithoutAnswerList = new ArrayList<>();
+    private static List<Map<String, Row>> filteredRowsForReport = new ArrayList<>();
 
-    public static List<Map<String, Row>> getRowsWithoutAnswerList() {
-        return rowsWithoutAnswerList;
+    public static List<Map<String, Row>> getFilteredRowsForReport() {
+        return filteredRowsForReport;
     }
 
     public static void createFirstReport(XSSFWorkbook workBook) {
@@ -43,8 +42,25 @@ public class ExcelReportsUtil {
                 rowsListWithoutAnswer.add(predictMap);
             }
         }
-        rowsWithoutAnswerList.addAll(rowsListWithoutAnswer);
+        filteredRowsForReport.addAll(rowsListWithoutAnswer);
         return rowsListWithoutAnswer;
+    }
+
+    public static List<Map<String, Row>> getRowsListWithOperatorAnswerCell(Sheet dataSheet) {
+        List<Map<String, Row>> rowsWithOperatorAnswerList = new ArrayList<>();
+        Iterator<Row> rowIterator = dataSheet.iterator();
+        Row headersRow = rowIterator.next();
+        Map<String, Row> headersMap = createNamedRowMap("headers", headersRow);
+        rowsWithOperatorAnswerList.add(headersMap);
+
+        while (rowIterator.hasNext()) {
+            Row currentRow = rowIterator.next();
+            String predictCategoryNum = ExcelReportsUtil.getPredictCellValue(currentRow);
+            Map<String, Row> predictMap = createNamedRowMap(predictCategoryNum, currentRow);
+            rowsWithOperatorAnswerList.add(predictMap);
+        }
+        filteredRowsForReport.addAll(rowsWithOperatorAnswerList);
+        return rowsWithOperatorAnswerList;
     }
 
     private static Map<String, Row> createNamedRowMap(String predictNumOrName, Row row) {
@@ -54,7 +70,23 @@ public class ExcelReportsUtil {
     }
 
     public static String getPredictCellValue(Row row) {
-        Cell predictCell = row.getCell(PREDICT_CELL_COLUMN_INDEX);
+        Cell predictCell = row.getCell(ExcelReader.PREDICT_CELL_COLUMN_INDEX);
+        String predictCellValue = "";
+        switch (predictCell.getCellType()) {
+            case STRING:
+                //skip headers
+                break;
+
+            default:
+                DataFormatter stringFormatter = new DataFormatter();
+                predictCellValue = stringFormatter.formatCellValue(predictCell);
+                break;
+        }
+        return predictCellValue;
+    }
+
+    public static String getPredictCellValue(Row row, int cellIndex) {
+        Cell predictCell = row.getCell(cellIndex);
         String predictCellValue = "";
         switch (predictCell.getCellType()) {
             case STRING:
@@ -110,45 +142,10 @@ public class ExcelReportsUtil {
                     rowContainsResult.add(true);
                 }
             }
-            if(!rowContainsResult.contains(true)){
+            if (!rowContainsResult.contains(true)) {
                 uniqueRowsCategoryList.add(newRowMap);
             }
         }
         return uniqueRowsCategoryList;
     }
-
-
-
-
-//    public static List<Map<String, Row>> createUniqueRowsList(List<Map<String, Row>> oldReportRowsList, List<Map<String, Row>> newReportRowsList, String category) {
-//        List<Map<String, Row>> uniqueRowsCategoryList = new ArrayList<>();
-//        List<Map<String,Row>> duplicateRows = new ArrayList<>();
-//        for (int i = 0; i < oldReportRowsList.size(); i++) {
-//            Row oldRow = oldReportRowsList.get(i).get(category);
-//            for (int j = 0; j < newReportRowsList.size(); j++) {
-//                Row newRow = newReportRowsList.get(j).get(category);
-//                if (oldRow.equals(newRow)) {
-//                    duplicateRows.add(newReportRowsList.get(j));
-//                }
-//            }
-//        }
-//
-//        return uniqueRowsCategoryList;
-//    }
-
-
-//    public static List<Map<String, Row>> createUniqueRowsList(List<Map<String, Row>> oldReportRowsList, List<Map<String, Row>> newReportRowsList) {
-//        List<Map<String, Row>> uniqueRowsCategoryList = new ArrayList<>();
-//        for (int i = 0; i < newReportRowsList.size(); i++) {
-//            for (Map<String, Row> oldReportRowMap : oldReportRowsList) {
-//                Map<String, Row> newReportRowMap = newReportRowsList.get(i);
-//                if (!newReportRowMap.entrySet().containsAll(oldReportRowMap.entrySet())) {
-//                    Map<String, Row> uniqueRowMap = new HashMap<>(newReportRowMap);
-//                    uniqueRowsCategoryList.add(uniqueRowMap);
-//                }
-//            }
-//        }
-//        return uniqueRowsCategoryList;
-//    }
-
 }

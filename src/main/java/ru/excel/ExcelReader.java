@@ -1,4 +1,4 @@
-package excel_parser;
+package ru.excel;
 
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 

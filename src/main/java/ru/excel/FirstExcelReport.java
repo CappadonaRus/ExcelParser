@@ -1,4 +1,4 @@
-package excel_parser;
+package ru.excel;
 
 import org.apache.poi.ss.usermodel.Row;
 
@@ -16,10 +16,9 @@ public class FirstExcelReport {
     }
 
     public static void createReportCategoriesList() {
-        List<Map<String, Row>> rowsWithoutAnswerList = ExcelReportsUtil.getRowsWithoutAnswerList();
-//        Collections.shuffle(rowsWithoutAnswerList);
+        List<Map<String, Row>> filteredRowsList = ExcelReportsUtil.getFilteredRowsForReport();
         for (String predictsList : ExcelWriter.getCategoriesList()) {
-            for (Map<String, Row> predictRow : rowsWithoutAnswerList) {
+            for (Map<String, Row> predictRow : filteredRowsList) {
                 List<Map<String, Row>> categoryRowsList = createCategoryRowsList(predictRow, predictsList);
                 firstReportRowsList.addAll(categoryRowsList);
             }

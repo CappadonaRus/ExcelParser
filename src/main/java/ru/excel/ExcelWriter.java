@@ -1,18 +1,13 @@
-package excel_parser;
+package ru.excel;
 
 import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.usermodel.XSSFFont;
-import org.apache.poi.xssf.usermodel.XSSFRow;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.xssf.usermodel.*;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import static excel_parser.Main.getFilePath;
 
 public class ExcelWriter {
 
@@ -21,6 +16,7 @@ public class ExcelWriter {
     private static final int CATEGORY_NAME_COLUMN_INDEX = 0;
     public static final int ANSWER_CELL_COLUMN_INDEX = 4;
     public static final int DATA_SHEET_INDEX = 0;
+    public static final int X_CELL_COLUMN_INDEX = 23;
 
     private static List<String> categoriesList = new ArrayList<>();
 
@@ -47,12 +43,42 @@ public class ExcelWriter {
                     lastCategory = rowCategory;
                     rowCount++;
                 }
-                XSSFRow rowForSave = sheet.createRow(rowCount);
-                Row predictRow = rowMap.getValue();
-                copyCellsForNewRow(rowForSave, predictRow);
+
+                if (rowCategory.equals("headers")) {
+                    XSSFRow headersRow = sheet.createRow(rowCount);
+                    Row headers = rowMap.getValue();
+                    XSSFCellStyle cellBorder = createBorderStyle(workBook);
+                    addBoldFont(workBook, cellBorder);
+                    copyCellsForNewRowWithStyle(headersRow, headers, cellBorder);
+                } else {
+                    XSSFRow rowForSave = sheet.createRow(rowCount);
+                    Row predictRow = rowMap.getValue();
+                    copyCellsForNewRow(rowForSave, predictRow);
+                    addBoldIdCell(workBook, rowForSave);
+                }
             }
             rowCount++;
         }
+    }
+
+    private static void addBoldIdCell(XSSFWorkbook workBook, XSSFRow rowForSave) {
+        XSSFCellStyle idBoldStyle = workBook.createCellStyle();
+        addBoldFont(workBook, idBoldStyle);
+        idBoldStyle.setBorderLeft(BorderStyle.THIN);
+        idBoldStyle.setBorderRight(BorderStyle.THIN);
+        idBoldStyle.setBorderBottom(BorderStyle.THIN);
+        idBoldStyle.setBorderTop(BorderStyle.THIN);
+        rowForSave.getCell(0).setCellStyle(idBoldStyle);
+        idBoldStyle.setAlignment(HorizontalAlignment.CENTER);
+    }
+
+    private static XSSFCellStyle createBorderStyle(XSSFWorkbook workBook) {
+        XSSFCellStyle cellBorder = workBook.createCellStyle();
+        cellBorder.setBorderLeft(BorderStyle.THIN);
+        cellBorder.setBorderRight(BorderStyle.THIN);
+        cellBorder.setBorderBottom(BorderStyle.THIN);
+        cellBorder.setBorderTop(BorderStyle.THIN);
+        return cellBorder;
     }
 
     private static void copyCellsForNewRow(XSSFRow newRow, Row row) {
@@ -62,9 +88,17 @@ public class ExcelWriter {
         }
     }
 
+    private static void copyCellsForNewRowWithStyle(XSSFRow newRow, Row row, XSSFCellStyle cellStyle) {
+        int numberOfCells = row.getPhysicalNumberOfCells();
+        for (int j = 0; j < numberOfCells; j++) {
+            writeCellContentViaType(newRow.createCell(j), row.getCell(j));
+            newRow.getCell(j).setCellStyle(cellStyle);
+        }
+    }
+
     public static void writeSheetIntoBook(XSSFWorkbook workBook) {
         try {
-            String filePath = getFilePath();
+            String filePath = ReportCreator.getFilePath();
             FileOutputStream fileOut = new FileOutputStream(filePath);
             workBook.write(fileOut);
             fileOut.close();
@@ -75,11 +109,13 @@ public class ExcelWriter {
 
     private static void createCategoryRow(XSSFRow categoryRow, XSSFWorkbook workbook, String rowCategory) {
         String categoryName = "Категория: " + rowCategory;
+        String additionalXText = "корректности";
         CellStyle categoryStyle = createCellsStyle(workbook, IndexedColors.YELLOW);
         addBoldFont(workbook, categoryStyle);
         categoryRow.createCell(CATEGORY_NAME_COLUMN_INDEX).setCellValue(categoryName);
         categoryRow.getCell(CATEGORY_NAME_COLUMN_INDEX).setCellStyle(categoryStyle);
         createCategoryCells(categoryStyle, categoryRow);
+        categoryRow.createCell(X_CELL_COLUMN_INDEX).setCellValue(additionalXText);
         createStatisticCell(workbook, categoryRow);
     }
 
