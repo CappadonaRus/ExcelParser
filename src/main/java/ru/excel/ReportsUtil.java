@@ -3,73 +3,18 @@ package ru.excel;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.util.*;
 
-import static ru.excel.ExcelWriter.ANSWER_CELL_COLUMN_INDEX;
-import static ru.excel.ExcelWriter.createReport;
+public class ReportsUtil {
 
-public class ExcelReportsUtil {
-
-    private static List<Map<String, Row>> filteredRowsForReport = new ArrayList<>();
-
-    public static List<Map<String, Row>> getFilteredRowsForReport() {
-        return filteredRowsForReport;
-    }
-
-    public static void createFirstReport(XSSFWorkbook workBook) {
-        List<Map<String, Row>> filteredRowsList = FirstExcelReport.getFirstReportRowsList();
-        XSSFSheet sheet = workBook.createSheet("—рез ≈ва");
-        createReport(workBook, sheet, filteredRowsList);
-    }
-
-    public static List<Map<String, Row>> getRowsListWithoutAnswerCell(Sheet dataSheet) {
-        List<Map<String, Row>> rowsListWithoutAnswer = new ArrayList<>();
-        Iterator<Row> rowIterator = dataSheet.iterator();
-        Row headersRow = rowIterator.next();
-        Map<String, Row> headersMap = createNamedRowMap("headers", headersRow);
-        rowsListWithoutAnswer.add(headersMap);
-
-        while (rowIterator.hasNext()) {
-            Row currentRow = rowIterator.next();
-            Cell answerCell = currentRow.getCell(ANSWER_CELL_COLUMN_INDEX);
-            if (answerCell != null) {
-                String predictCategoryNum = ExcelReportsUtil.getPredictCellValue(currentRow);
-                Map<String, Row> predictMap = createNamedRowMap(predictCategoryNum, currentRow);
-                rowsListWithoutAnswer.add(predictMap);
-            }
-        }
-        filteredRowsForReport.addAll(rowsListWithoutAnswer);
-        return rowsListWithoutAnswer;
-    }
-
-    public static List<Map<String, Row>> getRowsListWithOperatorAnswerCell(Sheet dataSheet) {
-        List<Map<String, Row>> rowsWithOperatorAnswerList = new ArrayList<>();
-        Iterator<Row> rowIterator = dataSheet.iterator();
-        Row headersRow = rowIterator.next();
-        Map<String, Row> headersMap = createNamedRowMap("headers", headersRow);
-        rowsWithOperatorAnswerList.add(headersMap);
-
-        while (rowIterator.hasNext()) {
-            Row currentRow = rowIterator.next();
-            String predictCategoryNum = ExcelReportsUtil.getPredictCellValue(currentRow);
-            Map<String, Row> predictMap = createNamedRowMap(predictCategoryNum, currentRow);
-            rowsWithOperatorAnswerList.add(predictMap);
-        }
-        filteredRowsForReport.addAll(rowsWithOperatorAnswerList);
-        return rowsWithOperatorAnswerList;
-    }
-
-    private static Map<String, Row> createNamedRowMap(String predictNumOrName, Row row) {
+    static Map<String, Row> createRowMap(String categoryName, Row row) {
         Map<String, Row> predictRowMap = new HashMap<>();
-        predictRowMap.put(predictNumOrName, row);
+        predictRowMap.put(categoryName, row);
         return predictRowMap;
     }
 
-    public static String getPredictCellValue(Row row) {
+    public static String getCategory(Row row) {
         Cell predictCell = row.getCell(ExcelReader.PREDICT_CELL_COLUMN_INDEX);
         String predictCellValue = "";
         switch (predictCell.getCellType()) {
@@ -85,7 +30,7 @@ public class ExcelReportsUtil {
         return predictCellValue;
     }
 
-    public static String getPredictCellValue(Row row, int cellIndex) {
+    public static String getCategory(Row row, int cellIndex) {
         Cell predictCell = row.getCell(cellIndex);
         String predictCellValue = "";
         switch (predictCell.getCellType()) {
@@ -147,5 +92,74 @@ public class ExcelReportsUtil {
             }
         }
         return uniqueRowsCategoryList;
+    }
+
+    static List<Map<String, Row>> getUniqueTenRows(List<Map<String, Row>> uniqueRowsList) {
+        List<Map<String, Row>> resultUniqueRowsList = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            resultUniqueRowsList.add(uniqueRowsList.get(i));
+
+        }
+        return resultUniqueRowsList;
+    }
+
+    static List<Map<String, Row>> appendUniqueRows(List<Map<String, Row>> uniqueRowsList, List<Map<String, Row>> categoryRowsList) {
+        int firstUniqueElementIndex = getFirstUniqueElementIndex(uniqueRowsList, categoryRowsList);
+        List<Map<String, Row>> resultRowsList = new ArrayList<>();
+
+        for (int i = firstUniqueElementIndex; firstUniqueElementIndex > 0 && (uniqueRowsList.size() + resultRowsList.size() != 10); --i) {
+            resultRowsList.add(0, categoryRowsList.get(i));
+        }
+        resultRowsList.addAll(uniqueRowsList);
+        return sortResultRowList(resultRowsList);
+    }
+
+    private static List<Map<String, Row>> sortResultRowList(List<Map<String, Row>> resultRowsList) {
+        List<Map<String, Row>> sortedMap = new ArrayList<>();
+        Object[] resultRows = resultRowsList.toArray();
+        bubbleSort(resultRows);
+        for (Object sortedRow : resultRows) {
+            sortedMap.add((Map<String, Row>) sortedRow);
+        }
+        return sortedMap;
+    }
+
+    private static void bubbleSort(Object[] resultRows) {
+        for (int i = 0; i < resultRows.length - 1; i++) {
+            for (int j = 0; j < resultRows.length - 1; j++) {
+                Map<String, Row> firstMap = (Map<String, Row>) resultRows[j];
+                int firstMapIdValue = getMapIdValue(firstMap);
+                Map<String, Row> secondMap = (Map<String, Row>) resultRows[j + 1];
+                int secondMapIdValue = getMapIdValue(secondMap);
+                if (firstMapIdValue > secondMapIdValue) {
+                    Object temp = resultRows[j];
+                    resultRows[j] = resultRows[j + 1];
+                    resultRows[j + 1] = temp;
+                    break;
+                }
+            }
+        }
+    }
+
+    private static int getMapIdValue(Map<String, Row> firstMap) {
+        int idValue = -1;
+        for (Map.Entry<String, Row> entry : firstMap.entrySet()) {
+            Row firstRow = entry.getValue();
+            idValue = Integer.parseInt(getCategory(firstRow, 0));
+            break;
+        }
+        return idValue;
+    }
+
+
+    private static int getFirstUniqueElementIndex(List<Map<String, Row>> uniqueRowsList, List<Map<String, Row>> categoryRowsList) {
+        int index = -1;
+        for (int i = 0; i < categoryRowsList.size(); i++) {
+            if (categoryRowsList.get(i).equals(uniqueRowsList.get(0))) {
+                index = --i;
+                break;
+            }
+        }
+        return index;
     }
 }

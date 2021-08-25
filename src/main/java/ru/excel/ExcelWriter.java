@@ -1,13 +1,17 @@
 package ru.excel;
 
 import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import static ru.excel.ReportStyles.*;
 
 public class ExcelWriter {
 
@@ -15,29 +19,16 @@ public class ExcelWriter {
     private static final int STATISTIC_CELL_NUMBER = CATEGORY_CELL_COUNT + 1;
     private static final int CATEGORY_NAME_COLUMN_INDEX = 0;
     public static final int ANSWER_CELL_COLUMN_INDEX = 4;
-    public static final int DATA_SHEET_INDEX = 0;
     public static final int X_CELL_COLUMN_INDEX = 23;
 
-    private static List<String> categoriesList = new ArrayList<>();
 
-    static {
-        categoriesList.add("headers");
-        for (int i = 1; i <= 125; i++) {
-            categoriesList.add(String.valueOf(i));
-        }
-    }
-
-    public static List<String> getCategoriesList() {
-        return categoriesList;
-    }
-
-    static void createReport(XSSFWorkbook workBook, XSSFSheet sheet, List<Map<String, Row>> reportRowsList) {
+    static void writeReportIntoSheet(XSSFWorkbook workBook, XSSFSheet sheet, List<Map<String, Row>> reportRowsList) {
         String lastCategory = "";
         int rowCount = 0;
         for (Map<String, Row> predictMap : reportRowsList) {
             for (Map.Entry<String, Row> rowMap : predictMap.entrySet()) {
                 String rowCategory = rowMap.getKey();
-                if (!lastCategory.equals(rowCategory) && ExcelReportsUtil.isHeadersRow(rowCategory)) {
+                if (!lastCategory.equals(rowCategory) && ReportsUtil.isHeadersRow(rowCategory)) {
                     XSSFRow categoryRow = sheet.createRow(rowCount);
                     createCategoryRow(categoryRow, workBook, rowCategory);
                     lastCategory = rowCategory;
@@ -48,7 +39,7 @@ public class ExcelWriter {
                     XSSFRow headersRow = sheet.createRow(rowCount);
                     Row headers = rowMap.getValue();
                     XSSFCellStyle cellBorder = createBorderStyle(workBook);
-                    addBoldFont(workBook, cellBorder);
+                    createBold(workBook, cellBorder);
                     copyCellsForNewRowWithStyle(headersRow, headers, cellBorder);
                 } else {
                     XSSFRow rowForSave = sheet.createRow(rowCount);
@@ -59,26 +50,6 @@ public class ExcelWriter {
             }
             rowCount++;
         }
-    }
-
-    private static void addBoldIdCell(XSSFWorkbook workBook, XSSFRow rowForSave) {
-        XSSFCellStyle idBoldStyle = workBook.createCellStyle();
-        addBoldFont(workBook, idBoldStyle);
-        idBoldStyle.setBorderLeft(BorderStyle.THIN);
-        idBoldStyle.setBorderRight(BorderStyle.THIN);
-        idBoldStyle.setBorderBottom(BorderStyle.THIN);
-        idBoldStyle.setBorderTop(BorderStyle.THIN);
-        rowForSave.getCell(0).setCellStyle(idBoldStyle);
-        idBoldStyle.setAlignment(HorizontalAlignment.CENTER);
-    }
-
-    private static XSSFCellStyle createBorderStyle(XSSFWorkbook workBook) {
-        XSSFCellStyle cellBorder = workBook.createCellStyle();
-        cellBorder.setBorderLeft(BorderStyle.THIN);
-        cellBorder.setBorderRight(BorderStyle.THIN);
-        cellBorder.setBorderBottom(BorderStyle.THIN);
-        cellBorder.setBorderTop(BorderStyle.THIN);
-        return cellBorder;
     }
 
     private static void copyCellsForNewRow(XSSFRow newRow, Row row) {
@@ -111,18 +82,12 @@ public class ExcelWriter {
         String categoryName = "Категория: " + rowCategory;
         String additionalXText = "корректности";
         CellStyle categoryStyle = createCellsStyle(workbook, IndexedColors.YELLOW);
-        addBoldFont(workbook, categoryStyle);
+        createBold(workbook, categoryStyle);
         categoryRow.createCell(CATEGORY_NAME_COLUMN_INDEX).setCellValue(categoryName);
         categoryRow.getCell(CATEGORY_NAME_COLUMN_INDEX).setCellStyle(categoryStyle);
         createCategoryCells(categoryStyle, categoryRow);
         categoryRow.createCell(X_CELL_COLUMN_INDEX).setCellValue(additionalXText);
         createStatisticCell(workbook, categoryRow);
-    }
-
-    private static void addBoldFont(XSSFWorkbook workbook, CellStyle categoryStyle) {
-        XSSFFont fontBold = workbook.createFont();
-        fontBold.setBold(true);
-        categoryStyle.setFont(fontBold);
     }
 
     private static void createStatisticCell(XSSFWorkbook workbook, XSSFRow categoryRow) {
