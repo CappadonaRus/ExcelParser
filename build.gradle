@@ -4,8 +4,8 @@ plugins {
 }
 
 version '1.0'
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+sourceCompatibility = 11
+targetCompatibility = 11
 
 repositories {
     mavenCentral()
@@ -21,7 +21,7 @@ dependencies {
     implementation 'org.apache.poi:poi-ooxml:5.0.0'
     implementation 'commons-io:commons-io:2.11.0'
 }
-mainClassName = 'ru.excel.ReportCreator'
+mainClassName = 'ru.excel.LateReportMain'
 jar {
     manifest {
         attributes(

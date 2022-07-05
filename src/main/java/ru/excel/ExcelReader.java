@@ -18,12 +18,10 @@ public class ExcelReader {
     }
 
     public static XSSFWorkbook readExcelWorkBook(String filePath) {
-        try {
-            FileInputStream inputStream = new FileInputStream(new File(filePath));
+        try (FileInputStream inputStream = new FileInputStream(new File(filePath))) {
             workbook = new XSSFWorkbook(inputStream);
-            inputStream.close();
-        } catch (IOException fileNotFoundException) {
-            fileNotFoundException.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
         return workbook;
     }
