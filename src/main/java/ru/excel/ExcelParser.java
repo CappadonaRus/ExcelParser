@@ -27,22 +27,27 @@ public class ExcelParser {
         resultRowsList.add(headersMap);
         while (rowIterator.hasNext()) {
             Row currentRow = rowIterator.next();
-            Map<String, Row> rowMap = new HashMap<>();
-            switch (reportType) {
-                case FIRST:
-                    String category = ReportsUtil.getCategory(currentRow);
-                    rowMap = createRowMap(category, currentRow);
-                    break;
-                case SECOND:
-                    Cell answerCell = currentRow.getCell(ANSWER_CELL_COLUMN_INDEX);
-                    if (answerCell != null) {
-                        String predictCategoryNum = ReportsUtil.getCategory(currentRow);
-                        rowMap = createRowMap(predictCategoryNum, currentRow);
-                    }
-                    break;
-            }
+            Map<String, Row> rowMap  = getStringRowMap(reportType, currentRow);
             resultRowsList.add(rowMap);
         }
         return resultRowsList;
+    }
+
+    private static Map<String, Row> getStringRowMap(ReportType reportType, Row currentRow) {
+        Map<String, Row> rowMap = new HashMap<>();
+        switch (reportType) {
+            case FIRST:
+                String category = ReportsUtil.getCategory(currentRow);
+                rowMap = createRowMap(category, currentRow);
+                break;
+            case SECOND:
+                Cell answerCell = currentRow.getCell(ANSWER_CELL_COLUMN_INDEX);
+                if (answerCell != null) {
+                    String predictCategoryNum = ReportsUtil.getCategory(currentRow);
+                    rowMap = createRowMap(predictCategoryNum, currentRow);
+                }
+                break;
+        }
+        return rowMap;
     }
 }

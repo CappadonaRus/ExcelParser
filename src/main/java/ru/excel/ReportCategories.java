@@ -9,7 +9,7 @@ public class ReportCategories {
 
     static {
         categoriesList.add("headers");
-        for (int i = 1; i <= 125; i++) {
+        for (int i = 1; i <= 126; i++) {
             categoriesList.add(String.valueOf(i));
         }
     }

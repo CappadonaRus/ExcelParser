@@ -45,9 +45,11 @@ public class SecondReport implements Reportable {
                 if (uniqueRowsList.size() >= 10) {
                     List<Map<String, Row>> uniqueTenRows = getUniqueTenRows(uniqueRowsList);
                     secondReportList.addAll(uniqueTenRows);
-                } else {
+                } else if (uniqueRowsList.size() > 0) {
                     List<Map<String, Row>> appendedUniqueRows = appendUniqueRows(uniqueRowsList, categoryList);
                     secondReportList.addAll(appendedUniqueRows);
+                } else {
+                    secondReportList.addAll(categoryList);
                 }
             } else {
                 secondReportList.addAll(categoryList);
